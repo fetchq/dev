@@ -1,0 +1,28 @@
+version: '2.1'
+services:
+
+    postgres:
+        image: fetchq/fetchq:9.6-1.2.0
+        ports:
+            - 5432:5432
+        volumes:
+            - ./data/postgres_db:/var/lib/postgresql/data
+    
+    queue:
+        image: node:9.9
+        depends_on:
+            - postgres
+        volumes:
+            - ./app:/usr/src/app
+            - ./data/node_modules:/usr/src/app/node_modules
+        environment:
+            LOG_LEVEL: ${LOG_LEVEL-verbose}
+            PGUSER: postgres
+            PGPASSWORD: postgres
+            PGDATABASE: postgres
+            PGHOST: postgres
+            PGPORT: 5432
+        working_dir: /usr/src/app
+        entrypoint: [ "yarn", "start:prod" ]
+        restart: always
+    
