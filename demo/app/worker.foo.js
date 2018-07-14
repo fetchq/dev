@@ -3,10 +3,11 @@ const moment = require('moment')
 module.exports = {
     queue: 'foo',
     version: 0,
-    concurrency: 2,
+    concurrency: 1,
     lock: '1m',
+    sleep: 1000 * 60,
     handler: async (doc, { worker }) => {
-        console.log(`${worker.id} :: ${doc.subject}`)
+        console.log(`*** WORKER *** ${worker.id} :: ${doc.subject}`)
 
         if (doc.subject === 'a2') {
             return {
@@ -53,7 +54,7 @@ module.exports = {
 
         return {
             action: 'reschedule',
-            nextIteration: moment().format('YYYY-MM-DD HH:mm Z'),
+            nextIteration: moment().add(1, 'year').format('YYYY-MM-DD HH:mm Z'),
             payload: {
                 ...doc.payload,
                 runs: (doc.payload.runs ||  0) + 1,

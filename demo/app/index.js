@@ -14,14 +14,14 @@ const boot = async () => {
         // set maintenance daemon properties
         maintenance: {
             limit: 1,       // how many jobs to run in one single server call?
-            delay: 250,     // how long to wait in between of successfull executions?
-            sleep: 1000,    // how long to wait if there is no further maintenance planned?
+            delay: 1000,     // how long to wait in between of successfull executions?
+            sleep: 10000,     // how long to wait if there is no further maintenance planned?
         },
 
         // register all the workers you want to run
         workers: [
             require('./worker.foo'),
-            require('./worker.faa'),
+            // require('./worker.faa'),
         ],
     })
 
@@ -87,15 +87,15 @@ const boot = async () => {
         })
 
         // push a huge amount of documents into queue "faa"
-        await client.queue.create('faa')
-        for (let i = 0; i < 100; i++) {
-            const ps = []
-            for (let j = 0; j < 100; j++) {
-                const p = client.doc.append('faa', { payload: { i } })
-                ps.push(p)
-            }
-            await Promise.all(ps)
-        }
+        // await client.queue.create('faa')
+        // for (let i = 0; i < 10; i++) {
+        //     const ps = []
+        //     for (let j = 0; j < 10; j++) {
+        //         const p = client.doc.append('faa', { payload: { i } })
+        //         ps.push(p)
+        //     }
+        //     await Promise.all(ps)
+        // }
     } catch (err) {
         client.logger.verbose(`FetchQ example queue setup error: ${err.message}`)
     }
