@@ -112,8 +112,8 @@ const boot = async () => {
         // append a huge number of documents
         // (append operation does not work in bulk!)
         client.logger.verbose('>>>>> START TO POPULATE FAA')
-        const iterations = 1
-        const docsPerIteration = 1000
+        const iterations = 10
+        const docsPerIteration = 100
         for (let i = 0; i < iterations; i++) {
             client.logger.verbose('>>>> Insert:', (i + 1) * docsPerIteration)
             const ps = []

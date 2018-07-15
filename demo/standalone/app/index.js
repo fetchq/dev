@@ -10,9 +10,10 @@ const boot = async () => {
     const client = fetchq({
         // set maintenance daemon properties
         maintenance: {
-            limit: 1, // how many jobs to run in one single server call?
-            delay: 250, // how long to wait in between of successfull executions?
-            sleep: 1000, // how long to wait if there is no further maintenance planned?
+            limit: 3,       // how many jobs to run in one single server call?
+            delay: 250,     // how long to wait in between of successfull executions?
+            sleep: 5000,    // how long to wait if there is no further maintenance planned?
+                            // anyway this is self optimized by checking for next planned task
         },
 
         // register all the workers you want to run
@@ -51,12 +52,17 @@ const boot = async () => {
 
 
     /**
-     * Upsert a queue and push some demo documents
-     * (optional step, just to make the demo running)
+     * FOO Queue
+     * ---------
+     * Foo queue handles a small volume of incoming documents, we hence
+     * enable the push notifications for this queue and in the worker
+     * we will be able to implement long (long, very long) polling to 
+     * the queue with a push "wake up" mechanism that will kick in as soon
+     * a new document becomes "pending".
      */
-
     try {
         await client.queue.create('foo')
+        await client.queue.enableNotifications('foo', true)
 
         // push a single document
         await client.doc.push('foo', {
@@ -69,7 +75,8 @@ const boot = async () => {
             // nextIteration: moment().add(1, 'second').format('YYYY-MM-DD HH:mm Z')
         })
 
-        // push multiple documents
+        // push multiple documents in a bulk operation
+        await client.queue.enableNotifications('foo', false)
         await client.doc.pushMany('foo', {
             // version: 0,
             // nextIteration: moment().add(1, 'second').format('YYYY-MM-DD HH:mm Z'),
@@ -82,23 +89,43 @@ const boot = async () => {
                 ['a6', 5, {}],
             ]
         })
+        await client.queue.enableNotifications('foo', true)
+        await client.queue.wakeUp('foo')
+    } catch (err) {
+        client.logger.error(`FetchQ - FOO population: ${err.message}`)
+    }
 
-        // push a huge amount of documents into queue "faa"
+
+
+    /**
+     * FAA Queue
+    //  * ---------
+     * faa does not have notifications enabled and rely only on the
+     * sleep timeout mechanism for checking new documents
+     */
+    try {
         await client.queue.create('faa')
-        for (let i = 0; i < 100; i++) {
+
+        // append a huge number of documents
+        // (append operation does not work in bulk!)
+        client.logger.verbose('>>>>> START TO POPULATE FAA')
+        const iterations = 10
+        const docsPerIteration = 100
+        for (let i = 0; i < iterations; i++) {
+            client.logger.verbose('>>>> Insert:', (i + 1) * docsPerIteration)
             const ps = []
-            for (let j = 0; j < 100; j++) {
-                const p = client.doc.append('faa', {
-                    payload: {
-                        i
-                    }
-                })
+            for (let j = 0; j < docsPerIteration; j++) {
+                const p = client.doc.append('faa', { payload: { i } })
                 ps.push(p)
             }
             await Promise.all(ps)
         }
+        client.logger.verbose('<<<<<< FAA POPULATION IS COMPLETE')
+
+        // forcefully wake up the queue after inserting all the docs
+        await client.queue.wakeUp('faa')
     } catch (err) {
-        client.logger.verbose(`FetchQ example queue setup error: ${err.message}`)
+        client.logger.error(`FetchQ - FAA population: ${err.message}`)
     }
 
 }
