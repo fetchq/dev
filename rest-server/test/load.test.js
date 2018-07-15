@@ -7,8 +7,8 @@ const pg = require('./lib/pg')
 describe.skip('Load Test', function () {
     this.timeout(60 * 1000 * 60)
     const queue = 'foo'
-    const docs = 100000
-    const chunk = 10000
+    const docs = 100000 * 10 * 5
+    const chunk = 10000 * 5
     const iterations = 2
     const limit = 250
 
@@ -107,7 +107,6 @@ const populateQueue = async (settings = {}) => {
     const queue = settings.queue || 'foo'
     const docs = settings.docs ||  10000
     const chunk = settings.chunk ||  10000
-    const nextIteration = settings.nextIteration || randomDate(moment().subtract(30, 'days').toDate(), moment().add(3, 'days').toDate())
     const version = settings.version || 0
 
     const il = Math.ceil(docs / chunk)
@@ -127,6 +126,7 @@ const populateQueue = async (settings = {}) => {
         }
 
         const start = new Date()
+        const nextIteration = settings.nextIteration || randomDate(moment().subtract(30, 'days').toDate(), moment().add(3, 'days').toDate())
         const res = await request.post(url(`/v1/queue/${queue}`)).send({
             version,
             nextIteration,
