@@ -3,11 +3,32 @@ const moment = require('moment')
 module.exports = {
     queue: 'foo',
     version: 0,
-    concurrency: 1,
+
+    // how long to reserve a document for execution
+    // (default: 5m) - see Postgres INTERVAL format
+    // http://www.postgresqltutorial.com/postgresql-interval/
     lock: '1m',
-    sleep: 1000 * 60,
+
+    // how many parallel worker instances to run
+    // (default: 1)
+    concurrency: 1,
+
+    // how many documents to fetch in advance
+    // (default: 1)
+    batch: 1,
+
+    // delay in between of each document
+    // (default: 0ms)
+    delay: 1,
+
+    // delay to apply if there are no documents to work out
+    // you can choose a very long sleep time (hours) and trust
+    // the push wake up system by enabling notifications for
+    // this queue.
+    sleep: 3600000, // 1h
+
     handler: async (doc, { worker }) => {
-        console.log(`*** WORKER *** ${worker.id} :: ${doc.subject}`)
+        console.log(`*** FOO WORKER *** ${worker.id} :: ${doc.subject}`)
 
         if (doc.subject === 'a2') {
             return {
@@ -52,9 +73,11 @@ module.exports = {
             }
         }
 
+        // the default action is to reschedule the document for further
+        // execution 5 seconds in the future.
         return {
             action: 'reschedule',
-            nextIteration: moment().add(1, 'year').format('YYYY-MM-DD HH:mm Z'),
+            nextIteration: moment().add(10, 'seconds').format('YYYY-MM-DD HH:mm Z'),
             payload: {
                 ...doc.payload,
                 runs: (doc.payload.runs ||  0) + 1,
