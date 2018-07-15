@@ -11,7 +11,7 @@ module.exports = {
 
     // how many parallel worker instances to run
     // (default: 1)
-    concurrency: 4,
+    concurrency: 8,
 
     // how many documents to fetch in advance
     // (default: 1)
@@ -19,7 +19,7 @@ module.exports = {
 
     // delay in between of each document
     // (default: 0ms)
-    delay: 1,
+    delay: 250,
 
     // delay to apply if there are no documents to work out
     // you can choose a very long sleep time (hours) and trust

@@ -15,7 +15,8 @@ const boot = async () => {
         maintenance: {
             limit: 3,       // how many jobs to run in one single server call?
             delay: 250,     // how long to wait in between of successfull executions?
-            sleep: 2500,    // how long to wait if there is no further maintenance planned?
+            sleep: 5000,    // how long to wait if there is no further maintenance planned?
+                            // anyway this is self optimized by checking for next planned task
         },
 
         // register all the workers you want to run
@@ -111,10 +112,12 @@ const boot = async () => {
         // append a huge number of documents
         // (append operation does not work in bulk!)
         client.logger.verbose('>>>>> START TO POPULATE FAA')
-        for (let i = 0; i < 5000; i++) {
-            client.logger.verbose('>>>> Insert:', (i + 1) * 1000)
+        const iterations = 1
+        const docsPerIteration = 1000
+        for (let i = 0; i < iterations; i++) {
+            client.logger.verbose('>>>> Insert:', (i + 1) * docsPerIteration)
             const ps = []
-            for (let j = 0; j < 1000; j++) {
+            for (let j = 0; j < docsPerIteration; j++) {
                 const p = client.doc.append('faa', { payload: { i } })
                 ps.push(p)
             }
